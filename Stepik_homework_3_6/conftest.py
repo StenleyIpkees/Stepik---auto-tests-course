@@ -1,38 +1,30 @@
 import pytest
-
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
 def pytest_addoption(parser):
-    """Обработчик для задания браузера и языка браузера из командной строки"""
-    parser.addoption("--browser_name", action="store", default="chrome",
-                     help="Choose browser: chrome or firefox")
-    parser.addoption("--language", action="store", default="ru",
-                     help="Choose language")
+    parser.addoption('--browser_name', action='store', default="firefox",
+                     help="Choose browser: chrome or firefox (other browsers aren't supported)")
+    parser.addoption('--language', action='store', default="en",
+                     help="Choose language: es, en, ru (default), de, etc.")
 
 
 @pytest.fixture(scope="function")
 def browser(request):
-    """Объявление выбранного браузера с выбранным языком"""
     browser_name = request.config.getoption("browser_name")
     user_language = request.config.getoption("language")
 
     if browser_name == "chrome":
-        print("\nstart chrome browser for test...")
-        language_setting = Options()
-        language_setting.add_experimental_option("prefs", {"intl.accept_languages": user_language})
-        browser = webdriver.Chrome(options=language_setting)
-        browser.implicitly_wait(5)
+        options = Options()
+        options.add_experimental_option('prefs', {'intl.accept_languages': user_language})
+        browser = webdriver.Chrome(options=options)
     elif browser_name == "firefox":
-        print("\nstart firefox browser for test...")
-        language_setting = webdriver.FirefoxProfile()
-        language_setting.set_preference("intl.accept_languages", user_language)
-        browser = webdriver.Firefox(firefox_profile=language_setting)
-        browser.implicitly_wait(5)
+        fp = webdriver.FirefoxProfile()
+        fp.set_preference("intl.accept_languages", user_language)
+        browser = webdriver.Firefox(firefox_profile=fp)
     else:
-        raise pytest.UsageError("--browser_name should be chrome or firefox")
-
+        print("Browser {} still is not implemented or his name is not correct".format(browser_name))
+        raise Exception()
     yield browser
-    print("\nquit browser")
     browser.quit()
